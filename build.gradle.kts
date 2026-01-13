@@ -18,6 +18,7 @@ dependencies {
 
     // Common dependencies (will be bundled in JAR)
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation("org.tomlj:tomlj:1.1.1")
     implementation("org.jetbrains:annotations:24.1.0")
 
     // Test dependencies
@@ -53,9 +54,12 @@ tasks {
     shadowJar {
         archiveBaseName.set(rootProject.name)
         archiveClassifier.set("")
+        destinationDirectory.set(file("/mnt/c/Users/Nicholas/Development/hytale-server/mods"))
 
         // Relocate dependencies to avoid conflicts
         relocate("com.google.gson", "com.nhulston.libs.gson")
+        relocate("org.tomlj", "com.nhulston.libs.tomlj")
+        relocate("org.antlr", "com.nhulston.libs.antlr")
 
         // Minimize JAR size (removes unused classes)
         minimize()
