@@ -5,6 +5,7 @@ import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.nhulston.essentials.commands.home.DelHomeCommand;
 import com.nhulston.essentials.commands.home.HomeCommand;
 import com.nhulston.essentials.commands.home.SetHomeCommand;
+import com.nhulston.essentials.commands.kit.KitCommand;
 import com.nhulston.essentials.commands.spawn.SetSpawnCommand;
 import com.nhulston.essentials.commands.spawn.SpawnCommand;
 import com.nhulston.essentials.commands.tpa.TpaCommand;
@@ -19,6 +20,7 @@ import com.nhulston.essentials.events.SpawnRegionTitleEvent;
 import com.nhulston.essentials.events.SpawnTeleportEvent;
 import com.nhulston.essentials.managers.ChatManager;
 import com.nhulston.essentials.managers.HomeManager;
+import com.nhulston.essentials.managers.KitManager;
 import com.nhulston.essentials.managers.SpawnManager;
 import com.nhulston.essentials.managers.SpawnProtectionManager;
 import com.nhulston.essentials.managers.TpaManager;
@@ -38,6 +40,7 @@ public class Essentials extends JavaPlugin {
     private ChatManager chatManager;
     private SpawnProtectionManager spawnProtectionManager;
     private TpaManager tpaManager;
+    private KitManager kitManager;
 
     public Essentials(@Nonnull JavaPluginInit init) {
         super(init);
@@ -57,6 +60,7 @@ public class Essentials extends JavaPlugin {
         chatManager = new ChatManager(configManager);
         spawnProtectionManager = new SpawnProtectionManager(configManager, storageManager);
         tpaManager = new TpaManager();
+        kitManager = new KitManager(getDataDirectory(), storageManager);
     }
 
     @Override
@@ -99,6 +103,9 @@ public class Essentials extends JavaPlugin {
         // TPA commands
         getCommandRegistry().registerCommand(new TpaCommand(tpaManager));
         getCommandRegistry().registerCommand(new TpacceptCommand(tpaManager));
+
+        // Kit command
+        getCommandRegistry().registerCommand(new KitCommand(kitManager));
     }
 
     private void registerEvents() {
