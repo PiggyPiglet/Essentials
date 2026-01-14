@@ -11,6 +11,11 @@ Essentials is an all-in-one utility plugin for Hytale server administrators.
 - Chat formatting (per-rank)
 - Build protection (global or spawn-only)
 
+![Homes](images/homes.png)
+![Warps](images/warps.png)
+![TPA](images/tpa.png)
+![Chat Format](images/chatformat.png)
+
 # Commands
 
 | Command              | Description                     | Permission            |
