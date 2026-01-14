@@ -102,8 +102,15 @@ public class StorageManager {
      */
     public boolean hasPlayerJoined(@Nonnull UUID playerUuid) {
         Path playerFile = getPlayerFile(playerUuid);
-        boolean exists = Files.exists(playerFile);
-        return exists;
+        return Files.exists(playerFile);
+    }
+
+    /**
+     * Marks a player as having joined by creating their data file.
+     */
+    public void markPlayerJoined(@Nonnull UUID playerUuid) {
+        getPlayerData(playerUuid);
+        savePlayerData(playerUuid);
     }
 
     // Warp methods

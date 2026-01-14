@@ -29,6 +29,11 @@ public class TpaCommand extends AbstractPlayerCommand {
     }
 
     @Override
+    protected boolean canGeneratePermission() {
+        return false;
+    }
+
+    @Override
     protected void execute(@Nonnull CommandContext context, @Nonnull Store<EntityStore> store,
                            @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
         PlayerRef target = context.get(targetArg);
@@ -54,6 +59,6 @@ public class TpaCommand extends AbstractPlayerCommand {
 
         // Notify the target
         Msg.info(target, playerRef.getUsername() + " has requested to teleport to you.");
-        Msg.info(target, "Type /tpaccept " + playerRef.getUsername() + " to accept.");
+        Msg.info(target, "Type '/tpaccept " + playerRef.getUsername() + "' to accept.");
     }
 }

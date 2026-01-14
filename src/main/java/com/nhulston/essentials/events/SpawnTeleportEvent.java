@@ -59,6 +59,11 @@ public class SpawnTeleportEvent {
             UUID uuid = playerRef.getUuid();
             boolean hasJoined = storageManager.hasPlayerJoined(uuid);
             
+            // Mark player as joined if this is their first time
+            if (!hasJoined) {
+                storageManager.markPlayerJoined(uuid);
+            }
+            
             // Check if we should teleport
             if (everyJoin || !hasJoined) {
                 Spawn spawn = spawnManager.getSpawn();
@@ -118,12 +123,9 @@ public class SpawnTeleportEvent {
         public void onComponentRemoved(@NotNull Ref<EntityStore> ref, @NotNull DeathComponent component,
                                        @NotNull Store<EntityStore> store, @NotNull CommandBuffer<EntityStore> buffer) {
             Spawn spawn = spawnManager.getSpawn();
-            if (spawn == null) {
-                Log.info("[DeathSpawn] No spawn set, skipping teleport");
-                return;
+            if (spawn != null) {
+                TeleportUtil.teleportToSpawnBuffered(ref, buffer, spawn);
             }
-
-            TeleportUtil.teleportToSpawnBuffered(ref, buffer, spawn);
         }
     }
 }
