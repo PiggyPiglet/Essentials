@@ -176,6 +176,14 @@ public class ConfigManager {
     }
 
     /**
+     * Reloads the configuration from disk.
+     */
+    public void reload() {
+        Log.info("Reloading config...");
+        load();
+    }
+
+    /**
      * Migrates the user's config by adding any missing sections from the default config.
      * Preserves user's existing values and comments.
      */

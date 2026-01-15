@@ -110,6 +110,14 @@ public class KitManager {
     }
 
     /**
+     * Reloads kits from kits.toml
+     */
+    public void reload() {
+        Log.info("Reloading kits...");
+        load();
+    }
+
+    /**
      * Creates default kits.toml from resources
      */
     private void createDefault() {

@@ -4,6 +4,7 @@ import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.universe.world.events.AllWorldsLoadedEvent;
 import com.nhulston.essentials.commands.back.BackCommand;
+import com.nhulston.essentials.commands.essentials.EssentialsCommand;
 import com.nhulston.essentials.commands.freecam.FreecamCommand;
 import com.nhulston.essentials.commands.god.GodCommand;
 import com.nhulston.essentials.commands.heal.HealCommand;
@@ -54,6 +55,8 @@ import javax.annotation.Nonnull;
 public class Essentials extends JavaPlugin {
     public static final String VERSION = "1.4.1";
     
+    private static Essentials instance;
+    
     private ConfigManager configManager;
     private StorageManager storageManager;
     private HomeManager homeManager;
@@ -73,6 +76,7 @@ public class Essentials extends JavaPlugin {
 
     @Override
     protected void setup() {
+        instance = this;
         Log.init(getLogger());
         Log.info("Essentials is starting...");
 
@@ -172,6 +176,9 @@ public class Essentials extends JavaPlugin {
 
         // Top command
         getCommandRegistry().registerCommand(new TopCommand());
+
+        // Essentials info command
+        getCommandRegistry().registerCommand(new EssentialsCommand());
     }
 
     private void registerEvents() {
@@ -205,5 +212,22 @@ public class Essentials extends JavaPlugin {
         getEventRegistry().registerGlobal(AllWorldsLoadedEvent.class, event -> {
             spawnManager.syncWorldSpawnProvider();
         });
+    }
+
+    /**
+     * Gets the plugin instance.
+     */
+    @Nonnull
+    public static Essentials getInstance() {
+        return instance;
+    }
+
+    /**
+     * Reloads all configuration files.
+     */
+    public void reloadConfigs() {
+        configManager.reload();
+        kitManager.reload();
+        Log.info("All configurations reloaded.");
     }
 }
