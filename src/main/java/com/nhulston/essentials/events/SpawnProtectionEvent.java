@@ -18,7 +18,6 @@ import com.hypixel.hytale.server.core.modules.entity.damage.DamageModule;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.nhulston.essentials.managers.SpawnProtectionManager;
-import com.nhulston.essentials.util.Log;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -47,10 +46,6 @@ public class SpawnProtectionEvent {
     }
 
     public void register(@Nonnull ComponentRegistryProxy<EntityStore> registry) {
-        if (!spawnProtectionManager.isEnabled()) {
-            return;
-        }
-
         // Register block break protection
         registry.registerSystem(new BreakBlockProtectionSystem(spawnProtectionManager));
 
@@ -61,11 +56,7 @@ public class SpawnProtectionEvent {
         registry.registerSystem(new DamageBlockProtectionSystem(spawnProtectionManager));
 
         // Register PvP protection using FilterDamageGroup
-        if (spawnProtectionManager.isInvulnerableEnabled()) {
-            registry.registerSystem(new SpawnDamageFilterSystem(spawnProtectionManager));
-        }
-
-        Log.info("Spawn protection enabled.");
+        registry.registerSystem(new SpawnDamageFilterSystem(spawnProtectionManager));
     }
 
     /**
@@ -91,7 +82,7 @@ public class SpawnProtectionEvent {
                            @NotNull Store<EntityStore> store,
                            @NotNull CommandBuffer<EntityStore> buffer,
                            BreakBlockEvent event) {
-            if (event.isCancelled()) {
+            if (!manager.isEnabled() || event.isCancelled()) {
                 return;
             }
 
@@ -135,7 +126,7 @@ public class SpawnProtectionEvent {
                            @NotNull Store<EntityStore> store,
                            @NotNull CommandBuffer<EntityStore> buffer,
                            PlaceBlockEvent event) {
-            if (event.isCancelled()) {
+            if (!manager.isEnabled() || event.isCancelled()) {
                 return;
             }
 
@@ -176,7 +167,7 @@ public class SpawnProtectionEvent {
                            @NotNull Store<EntityStore> store,
                            @NotNull CommandBuffer<EntityStore> buffer,
                            DamageBlockEvent event) {
-            if (event.isCancelled()) {
+            if (!manager.isEnabled() || event.isCancelled()) {
                 return;
             }
 
@@ -222,7 +213,7 @@ public class SpawnProtectionEvent {
                            @NotNull Store<EntityStore> store,
                            @NotNull CommandBuffer<EntityStore> buffer,
                            Damage event) {
-            if (event.isCancelled()) {
+            if (!manager.isEnabled() || !manager.isInvulnerableEnabled() || event.isCancelled()) {
                 return;
             }
 

@@ -14,7 +14,6 @@ import com.hypixel.hytale.server.core.permissions.PermissionsModule;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.nhulston.essentials.util.ConfigManager;
-import com.nhulston.essentials.util.Log;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -32,15 +31,9 @@ public class BuildProtectionEvent {
     }
 
     public void register(@Nonnull ComponentRegistryProxy<EntityStore> registry) {
-        if (!configManager.isBuildingDisabled()) {
-            return;
-        }
-
-        registry.registerSystem(new BreakBlockProtectionSystem());
-        registry.registerSystem(new PlaceBlockProtectionSystem());
-        registry.registerSystem(new DamageBlockProtectionSystem());
-
-        Log.info("Global build protection enabled.");
+        registry.registerSystem(new BreakBlockProtectionSystem(configManager));
+        registry.registerSystem(new PlaceBlockProtectionSystem(configManager));
+        registry.registerSystem(new DamageBlockProtectionSystem(configManager));
     }
 
     private static boolean canBypass(@Nonnull UUID playerUuid) {
@@ -59,8 +52,11 @@ public class BuildProtectionEvent {
     private static class BreakBlockProtectionSystem
             extends EntityEventSystem<EntityStore, BreakBlockEvent> {
 
-        BreakBlockProtectionSystem() {
+        private final ConfigManager configManager;
+
+        BreakBlockProtectionSystem(ConfigManager configManager) {
             super(BreakBlockEvent.class);
+            this.configManager = configManager;
         }
 
         @Override
@@ -72,8 +68,8 @@ public class BuildProtectionEvent {
         public void handle(int index, @NotNull ArchetypeChunk<EntityStore> chunk,
                            @NotNull Store<EntityStore> store,
                            @NotNull CommandBuffer<EntityStore> buffer,
-                           BreakBlockEvent event) {
-            if (event.isCancelled()) {
+                           @NotNull BreakBlockEvent event) {
+            if (!configManager.isBuildingDisabled() || event.isCancelled()) {
                 return;
             }
 
@@ -93,8 +89,11 @@ public class BuildProtectionEvent {
     private static class PlaceBlockProtectionSystem
             extends EntityEventSystem<EntityStore, PlaceBlockEvent> {
 
-        PlaceBlockProtectionSystem() {
+        private final ConfigManager configManager;
+
+        PlaceBlockProtectionSystem(ConfigManager configManager) {
             super(PlaceBlockEvent.class);
+            this.configManager = configManager;
         }
 
         @Override
@@ -106,8 +105,8 @@ public class BuildProtectionEvent {
         public void handle(int index, @NotNull ArchetypeChunk<EntityStore> chunk,
                            @NotNull Store<EntityStore> store,
                            @NotNull CommandBuffer<EntityStore> buffer,
-                           PlaceBlockEvent event) {
-            if (event.isCancelled()) {
+                           @NotNull PlaceBlockEvent event) {
+            if (!configManager.isBuildingDisabled() || event.isCancelled()) {
                 return;
             }
 
@@ -127,8 +126,11 @@ public class BuildProtectionEvent {
     private static class DamageBlockProtectionSystem
             extends EntityEventSystem<EntityStore, DamageBlockEvent> {
 
-        DamageBlockProtectionSystem() {
+        private final ConfigManager configManager;
+
+        DamageBlockProtectionSystem(ConfigManager configManager) {
             super(DamageBlockEvent.class);
+            this.configManager = configManager;
         }
 
         @Override
@@ -140,8 +142,8 @@ public class BuildProtectionEvent {
         public void handle(int index, @NotNull ArchetypeChunk<EntityStore> chunk,
                            @NotNull Store<EntityStore> store,
                            @NotNull CommandBuffer<EntityStore> buffer,
-                           DamageBlockEvent event) {
-            if (event.isCancelled()) {
+                           @NotNull DamageBlockEvent event) {
+            if (!configManager.isBuildingDisabled() || event.isCancelled()) {
                 return;
             }
 

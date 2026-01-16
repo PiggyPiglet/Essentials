@@ -23,7 +23,6 @@ import com.nhulston.essentials.managers.SpawnManager;
 import com.nhulston.essentials.models.Spawn;
 import com.nhulston.essentials.util.ColorUtil;
 import com.nhulston.essentials.util.ConfigManager;
-import com.nhulston.essentials.util.Log;
 import com.nhulston.essentials.util.StorageManager;
 import com.nhulston.essentials.util.TeleportUtil;
 import org.jetbrains.annotations.NotNull;
@@ -44,17 +43,17 @@ public class SpawnTeleportEvent {
     }
 
     public void registerEvents(@Nonnull EventRegistry eventRegistry) {
-        boolean firstJoin = configManager.isFirstJoinSpawnEnabled();
-        boolean everyJoin = configManager.isEveryJoinSpawnEnabled();
-        
-        if (!firstJoin && !everyJoin) {
-            return;
-        }
-        
         // Use PlayerConnectEvent - fires BEFORE player joins a world
         // This allows us to set which world they join and their spawn position
         // Avoids the jarring teleport after spawn that happens with PlayerReadyEvent
         eventRegistry.registerGlobal(PlayerConnectEvent.class, event -> {
+            boolean firstJoin = configManager.isFirstJoinSpawnEnabled();
+            boolean everyJoin = configManager.isEveryJoinSpawnEnabled();
+            
+            if (!firstJoin && !everyJoin) {
+                return;
+            }
+            
             PlayerRef playerRef = event.getPlayerRef();
             UUID uuid = playerRef.getUuid();
             
@@ -98,19 +97,10 @@ public class SpawnTeleportEvent {
                 }
             }
         });
-        
-        if (everyJoin) {
-            Log.info("Every-join spawn teleport enabled.");
-        } else {
-            Log.info("First-join spawn teleport enabled.");
-        }
     }
 
     public void registerSystems(@Nonnull ComponentRegistryProxy<EntityStore> registry) {
-        if (configManager.isDeathSpawnEnabled()) {
-            registry.registerSystem(new RespawnTeleportSystem(spawnManager));
-            Log.info("Death spawn teleport enabled.");
-        }
+        registry.registerSystem(new RespawnTeleportSystem(spawnManager, configManager));
     }
 
     /**
@@ -118,9 +108,11 @@ public class SpawnTeleportEvent {
      */
     private static class RespawnTeleportSystem extends RefChangeSystem<EntityStore, DeathComponent> {
         private final SpawnManager spawnManager;
+        private final ConfigManager configManager;
 
-        RespawnTeleportSystem(SpawnManager spawnManager) {
+        RespawnTeleportSystem(SpawnManager spawnManager, ConfigManager configManager) {
             this.spawnManager = spawnManager;
+            this.configManager = configManager;
         }
 
         @Override
@@ -148,6 +140,10 @@ public class SpawnTeleportEvent {
         @Override
         public void onComponentRemoved(@NotNull Ref<EntityStore> ref, @NotNull DeathComponent component,
                                        @NotNull Store<EntityStore> store, @NotNull CommandBuffer<EntityStore> buffer) {
+            if (!configManager.isDeathSpawnEnabled()) {
+                return;
+            }
+            
             Spawn spawn = spawnManager.getSpawn();
             if (spawn != null) {
                 TeleportUtil.teleportToSpawnBuffered(ref, buffer, spawn);

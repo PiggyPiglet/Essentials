@@ -33,12 +33,7 @@ public class SleepPercentageEvent {
     }
 
     public void register(@Nonnull ComponentRegistryProxy<EntityStore> registry) {
-        if (!configManager.isSleepEnabled()) {
-            return;
-        }
-
         registry.registerSystem(new SleepTrackingSystem(configManager));
-        Log.info("Sleep percentage system enabled (" + configManager.getSleepPercentage() + "%).");
     }
 
     /**
@@ -70,6 +65,9 @@ public class SleepPercentageEvent {
         @Override
         public void onComponentAdded(@NotNull Ref<EntityStore> ref, @NotNull PlayerSomnolence somnolence,
                                      @NotNull Store<EntityStore> store, @NotNull CommandBuffer<EntityStore> buffer) {
+            if (!config.isSleepEnabled()) {
+                return;
+            }
             if (isInBed(somnolence)) {
                 onPlayerEnteredBed(store);
             }
@@ -79,6 +77,9 @@ public class SleepPercentageEvent {
         public void onComponentSet(@NotNull Ref<EntityStore> ref, PlayerSomnolence oldSomnolence,
                                    @NotNull PlayerSomnolence newSomnolence,
                                    @NotNull Store<EntityStore> store, @NotNull CommandBuffer<EntityStore> buffer) {
+            if (!config.isSleepEnabled()) {
+                return;
+            }
             boolean wasInBed = isInBed(oldSomnolence);
             boolean isInBed = isInBed(newSomnolence);
 
@@ -92,6 +93,9 @@ public class SleepPercentageEvent {
         @Override
         public void onComponentRemoved(@NotNull Ref<EntityStore> ref, @NotNull PlayerSomnolence somnolence,
                                        @NotNull Store<EntityStore> store, @NotNull CommandBuffer<EntityStore> buffer) {
+            if (!config.isSleepEnabled()) {
+                return;
+            }
             if (isInBed(somnolence)) {
                 onPlayerLeftBed(store);
             }

@@ -8,7 +8,6 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.nhulston.essentials.util.ColorUtil;
 import com.nhulston.essentials.util.ConfigManager;
-import com.nhulston.essentials.util.Log;
 
 import javax.annotation.Nonnull;
 
@@ -23,11 +22,11 @@ public class MotdEvent {
     }
 
     public void register(@Nonnull EventRegistry eventRegistry) {
-        if (!configManager.isMotdEnabled()) {
-            return;
-        }
-
         eventRegistry.registerGlobal(PlayerReadyEvent.class, event -> {
+            if (!configManager.isMotdEnabled()) {
+                return;
+            }
+            
             Ref<EntityStore> ref = event.getPlayerRef();
             if (!ref.isValid()) {
                 return;
@@ -56,7 +55,5 @@ public class MotdEvent {
                 }
             }
         });
-
-        Log.info("MOTD enabled.");
     }
 }

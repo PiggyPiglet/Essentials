@@ -13,6 +13,7 @@ import com.hypixel.hytale.server.core.util.EventTitleUtil;
 import com.nhulston.essentials.managers.SpawnProtectionManager;
 import com.nhulston.essentials.util.ConfigManager;
 import com.nhulston.essentials.util.Log;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
@@ -67,7 +68,7 @@ public class SpawnRegionTitleEvent {
 
         @Override
         public void tick(float deltaTime, int index, ArchetypeChunk<EntityStore> chunk,
-                        Store<EntityStore> store, CommandBuffer<EntityStore> buffer) {
+                         @NotNull Store<EntityStore> store, @NotNull CommandBuffer<EntityStore> buffer) {
             PlayerRef playerRef = chunk.getComponent(index, PlayerRef.getComponentType());
             if (playerRef == null) {
                 return;
