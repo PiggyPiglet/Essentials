@@ -1,5 +1,11 @@
 package com.nhulston.essentials.gui;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
@@ -26,11 +32,6 @@ import com.nhulston.essentials.models.KitItem;
 import com.nhulston.essentials.util.CooldownUtil;
 import com.nhulston.essentials.util.Msg;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * A GUI page for selecting kits.
  */
@@ -55,35 +56,56 @@ public class KitPage extends InteractiveCustomUIPage<KitPage.KitPageData> {
             return;
         }
 
-        for (int i = 0; i < allKits.size(); i++) {
-            Kit kit = allKits.get(i);
-            String selector = "#KitCards[" + i + "]";
+        // Create a grid layout with 3 kits per row
+        int kitsPerRow = 3;
+        int totalRows = (int) Math.ceil((double) allKits.size() / kitsPerRow);
 
-            commandBuilder.append("#KitCards", "Pages/Essentials_KitEntry.ui");
-            commandBuilder.set(selector + " #Name.Text", kit.getDisplayName());
+        for (int row = 0; row < totalRows; row++) {
+            // Create a row group for this row
+            commandBuilder.appendInline("#KitRows", 
+                "Group { LayoutMode: Left; Anchor: (Height: 128); Padding: (Horizontal: 4); }");
+            
+            String rowSelector = "#KitRows[" + row + "]";
+            
+            // Calculate start and end index for this row
+            int startIdx = row * kitsPerRow;
+            int endIdx = Math.min(startIdx + kitsPerRow, allKits.size());
+            
+            for (int col = 0; col < (endIdx - startIdx); col++) {
+                int kitIdx = startIdx + col;
+                Kit kit = allKits.get(kitIdx);
+                
+                // Append kit entry to this row
+                commandBuilder.append(rowSelector, "Pages/Essentials_KitEntry.ui");
+                
+                // Select the kit card within the row
+                String cardSelector = rowSelector + "[" + col + "]";
+                
+                commandBuilder.set(cardSelector + " #Name.Text", kit.getDisplayName());
 
-            // Check permission and cooldown status
-            String permission = "essentials.kit." + kit.getId();
-            boolean hasPermission = PermissionsModule.get().hasPermission(playerRef.getUuid(), permission);
+                // Check permission and cooldown status
+                String permission = "essentials.kit." + kit.getId();
+                boolean hasPermission = PermissionsModule.get().hasPermission(playerRef.getUuid(), permission);
 
-            String status;
-            if (!hasPermission) {
-                status = "You don't have access to this kit";
-            } else {
-                long remainingCooldown = kitManager.getRemainingCooldown(playerRef.getUuid(), kit.getId());
-                if (remainingCooldown > 0) {
-                    status = "Cooldown: " + CooldownUtil.formatCooldown(remainingCooldown);
+                String status;
+                if (!hasPermission) {
+                    status = "No access";
                 } else {
-                    status = "Ready to claim";
+                    long remainingCooldown = kitManager.getRemainingCooldown(playerRef.getUuid(), kit.getId());
+                    if (remainingCooldown > 0) {
+                        status = CooldownUtil.formatCooldown(remainingCooldown);
+                    } else {
+                        status = "Ready";
+                    }
                 }
-            }
-            commandBuilder.set(selector + " #Status.Text", status);
+                commandBuilder.set(cardSelector + " #Status.Text", status);
 
-            eventBuilder.addEventBinding(
-                    CustomUIEventBindingType.Activating,
-                    selector,
-                    EventData.of("Kit", kit.getId())
-            );
+                eventBuilder.addEventBinding(
+                        CustomUIEventBindingType.Activating,
+                        cardSelector,
+                        EventData.of("Kit", kit.getId())
+                );
+            }
         }
     }
 

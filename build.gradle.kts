@@ -60,7 +60,12 @@ tasks {
         relocate("com.google.gson", "com.nhulston.libs.gson")
         relocate("org.tomlj", "com.nhulston.libs.tomlj")
         relocate("org.antlr", "com.nhulston.libs.antlr")
+        relocate("com.google.errorprone", "com.nhulston.libs.errorprone")
+        relocate("io.netty", "com.nhulston.libs.netty")
 
+        // Merge service files properly
+        mergeServiceFiles()
+        
         // Minimize JAR size (removes unused classes)
         minimize()
     }

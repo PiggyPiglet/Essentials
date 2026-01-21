@@ -25,6 +25,7 @@ public class KitCommand extends AbstractPlayerCommand {
 
     public KitCommand(@Nonnull KitManager kitManager) {
         super("kit", "Open the kit selection menu");
+        this.addAliases("kits");
         this.kitManager = kitManager;
 
         requirePermission("essentials.kit");
