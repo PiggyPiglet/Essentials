@@ -138,6 +138,7 @@ public final class TeleportUtil {
 
     /**
      * Teleports one player to another player's location.
+     * THREAD-SAFE: Handles cross-world teleports correctly.
      *
      * @param player The player to teleport
      * @param target The player to teleport to
@@ -157,24 +158,54 @@ public final class TeleportUtil {
         Store<EntityStore> playerStore = playerRef.getStore();
         Store<EntityStore> targetStore = targetRef.getStore();
         
-        // Get target's position
-        TransformComponent targetTransform = targetStore.getComponent(targetRef, TransformComponent.getComponentType());
-        if (targetTransform == null) {
-            return;
-        }
-        
-        Vector3d targetPos = targetTransform.getPosition();
-        
         // Get target's world
         EntityStore targetEntityStore = targetStore.getExternalData();
         World targetWorld = targetEntityStore.getWorld();
         
-        // Get target's rotation and round to cardinal direction
-        Vector3f rotation = cardinalRotation(targetTransform.getRotation());
-
-        // Teleport the player
-        Teleport teleport = new Teleport(targetWorld, targetPos, rotation);
-        playerStore.putComponent(playerRef, Teleport.getComponentType(), teleport);
+        // Get player's world
+        EntityStore playerEntityStore = playerStore.getExternalData();
+        World playerWorld = playerEntityStore.getWorld();
+        
+        // Check if same world - if so, simple case
+        if (targetWorld == playerWorld) {
+            // Same world - safe to access directly
+            TransformComponent targetTransform = targetStore.getComponent(targetRef, TransformComponent.getComponentType());
+            if (targetTransform == null) {
+                return;
+            }
+            
+            Vector3d targetPos = targetTransform.getPosition();
+            Vector3f rotation = cardinalRotation(targetTransform.getRotation());
+            
+            Teleport teleport = new Teleport(targetWorld, targetPos, rotation);
+            playerStore.putComponent(playerRef, Teleport.getComponentType(), teleport);
+        } else {
+            // Cross-world teleport - need to read target position on target world's thread
+            targetWorld.execute(() -> {
+                if (!targetRef.isValid()) {
+                    return;
+                }
+                
+                TransformComponent targetTransform = targetStore.getComponent(targetRef, TransformComponent.getComponentType());
+                if (targetTransform == null) {
+                    return;
+                }
+                
+                // Capture position data (clone to prevent mutation)
+                Vector3d targetPos = targetTransform.getPosition().clone();
+                Vector3f rotation = cardinalRotation(targetTransform.getRotation());
+                
+                // Now execute teleport on player's world thread
+                playerWorld.execute(() -> {
+                    if (!playerRef.isValid()) {
+                        return;
+                    }
+                    
+                    Teleport teleport = new Teleport(targetWorld, targetPos, rotation);
+                    playerStore.putComponent(playerRef, Teleport.getComponentType(), teleport);
+                });
+            });
+        }
     }
 
     /**
@@ -235,48 +266,105 @@ public final class TeleportUtil {
 
     /**
      * Teleports a player to another player by UUID (for delayed teleports).
+     * THREAD-SAFE: Handles cross-world teleports correctly using callbacks.
      *
-     * @param store The entity store
+     * @param store The entity store (player's current world)
      * @param playerRef The player to teleport
      * @param targetUuid The UUID of the target player
-     * @return null if successful, error message if failed
+     * @param onSuccess Callback invoked after successful teleport
+     * @param onError Callback invoked with error message if failed
      */
-    @Nullable
-    public static String teleportToPlayerByUuid(@Nonnull Store<EntityStore> store,
-                                                @Nonnull Ref<EntityStore> playerRef,
-                                                @Nonnull java.util.UUID targetUuid) {
+    public static void teleportToPlayerByUuid(@Nonnull Store<EntityStore> store,
+                                              @Nonnull Ref<EntityStore> playerRef,
+                                              @Nonnull java.util.UUID targetUuid,
+                                              @Nullable Runnable onSuccess,
+                                              @Nullable java.util.function.Consumer<String> onError) {
         PlayerRef target = Universe.get().getPlayer(targetUuid);
         if (target == null) {
-            return "Target player is no longer online.";
+            if (onError != null) {
+                onError.accept("Target player is no longer online.");
+            }
+            return;
         }
 
         Ref<EntityStore> targetRef = target.getReference();
         if (targetRef == null || !targetRef.isValid()) {
-            return "Target player is not available.";
+            if (onError != null) {
+                onError.accept("Target player is not available.");
+            }
+            return;
         }
 
         Store<EntityStore> targetStore = targetRef.getStore();
-
-        // Get target's position
-        TransformComponent targetTransform = targetStore.getComponent(targetRef, TransformComponent.getComponentType());
-        if (targetTransform == null) {
-            return "Could not get target position.";
-        }
-
-        Vector3d targetPos = targetTransform.getPosition();
 
         // Get target's world
         EntityStore targetEntityStore = targetStore.getExternalData();
         World targetWorld = targetEntityStore.getWorld();
 
-        // Get target's rotation and round to cardinal direction
-        Vector3f rotation = cardinalRotation(targetTransform.getRotation());
+        // Get player's world
+        EntityStore playerEntityStore = store.getExternalData();
+        World playerWorld = playerEntityStore.getWorld();
 
-        // Teleport the player
-        Teleport teleport = new Teleport(targetWorld, targetPos, rotation);
-        store.putComponent(playerRef, Teleport.getComponentType(), teleport);
+        // Check if same world
+        if (targetWorld == playerWorld) {
+            // Same world - safe to access directly
+            TransformComponent targetTransform = targetStore.getComponent(targetRef, TransformComponent.getComponentType());
+            if (targetTransform == null) {
+                if (onError != null) {
+                    onError.accept("Could not get target position.");
+                }
+                return;
+            }
 
-        return null;
+            Vector3d targetPos = targetTransform.getPosition();
+            Vector3f rotation = cardinalRotation(targetTransform.getRotation());
+
+            Teleport teleport = new Teleport(targetWorld, targetPos, rotation);
+            store.putComponent(playerRef, Teleport.getComponentType(), teleport);
+
+            if (onSuccess != null) {
+                onSuccess.run();
+            }
+        } else {
+            // Cross-world teleport - read target position on target world's thread
+            targetWorld.execute(() -> {
+                if (!targetRef.isValid()) {
+                    if (onError != null) {
+                        onError.accept("Target player is not available.");
+                    }
+                    return;
+                }
+
+                TransformComponent targetTransform = targetStore.getComponent(targetRef, TransformComponent.getComponentType());
+                if (targetTransform == null) {
+                    if (onError != null) {
+                        onError.accept("Could not get target position.");
+                    }
+                    return;
+                }
+
+                // Capture position data (clone to prevent mutation)
+                Vector3d targetPos = targetTransform.getPosition().clone();
+                Vector3f rotation = cardinalRotation(targetTransform.getRotation());
+
+                // Execute teleport on player's world thread
+                playerWorld.execute(() -> {
+                    if (!playerRef.isValid()) {
+                        if (onError != null) {
+                            onError.accept("Player is not available.");
+                        }
+                        return;
+                    }
+
+                    Teleport teleport = new Teleport(targetWorld, targetPos, rotation);
+                    store.putComponent(playerRef, Teleport.getComponentType(), teleport);
+
+                    if (onSuccess != null) {
+                        onSuccess.run();
+                    }
+                });
+            });
+        }
     }
 
     /**

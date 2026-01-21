@@ -163,25 +163,41 @@ public class TeleportManager {
                     return;
                 }
 
-                String error = null;
                 if (pending.isPlayerTeleport()) {
-                    // Teleport to another player
-                    error = TeleportUtil.teleportToPlayerByUuid(store, currentRef, pending.getTargetPlayerUuid());
+                    // Teleport to another player (async, handles cross-world)
+                    TeleportUtil.teleportToPlayerByUuid(
+                        store, 
+                        currentRef, 
+                        pending.getTargetPlayerUuid(),
+                        () -> {
+                            // Success callback
+                            if (pending.getSuccessMessage() != null) {
+                                Msg.success(pending.getPlayerRef(), pending.getSuccessMessage());
+                            }
+                            if (pending.getOnSuccess() != null) {
+                                pending.getOnSuccess().run();
+                            }
+                        },
+                        error -> {
+                            // Error callback
+                            Msg.fail(pending.getPlayerRef(), error);
+                        }
+                    );
                 } else {
                     // Teleport to coordinates
                     TeleportDestination dest = pending.getDestination();
-                    error = TeleportUtil.teleportSafe(store, currentRef, dest.worldName,
+                    String error = TeleportUtil.teleportSafe(store, currentRef, dest.worldName,
                             dest.x, dest.y, dest.z, dest.yaw, dest.pitch);
-                }
 
-                if (error != null) {
-                    Msg.fail(pending.getPlayerRef(), error);
-                } else {
-                    if (pending.getSuccessMessage() != null) {
-                        Msg.success(pending.getPlayerRef(), pending.getSuccessMessage());
-                    }
-                    if (pending.getOnSuccess() != null) {
-                        pending.getOnSuccess().run();
+                    if (error != null) {
+                        Msg.fail(pending.getPlayerRef(), error);
+                    } else {
+                        if (pending.getSuccessMessage() != null) {
+                            Msg.success(pending.getPlayerRef(), pending.getSuccessMessage());
+                        }
+                        if (pending.getOnSuccess() != null) {
+                            pending.getOnSuccess().run();
+                        }
                     }
                 }
             } catch (Exception e) {
