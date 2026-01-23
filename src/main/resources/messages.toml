@@ -33,6 +33,10 @@ not-found = "&cHome '{home}' not found."
 [commands.spawn]
 not-set = "&cSpawn has not been set."
 teleported = "&aTeleported to spawn."
+teleported-other = "&aTeleported {player} to spawn."
+teleported-by = "&eYou have been teleported to spawn by {sender}."
+console-requires-player = "&cConsole must specify a player: /spawn <player>"
+player-not-found = "&cPlayer not found."
 
 [commands.setspawn]
 success = "&aSpawn set!"
@@ -43,6 +47,9 @@ no-warps = "&cNo warps have been set."
 not-found = "&cWarp '{warp}' not found."
 list-prefix = "&6Warps"
 teleported = "&aTeleported to warp '{warp}'"
+teleported-other = "&aTeleported {player} to warp '{warp}'."
+teleported-by = "&eYou have been teleported to warp '{warp}' by {sender}."
+console-requires-player = "&cConsole must specify a player: /warp <warpname> <player>"
 
 [commands.setwarp]
 success = "&aWarp '{warp}' set in world {world}"

@@ -4,6 +4,7 @@ import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.math.vector.Vector3f;
+import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
@@ -18,10 +19,18 @@ import com.nhulston.essentials.managers.WarpManager;
 import com.nhulston.essentials.models.Warp;
 import com.nhulston.essentials.util.MessageManager;
 import com.nhulston.essentials.util.Msg;
+import com.nhulston.essentials.util.TeleportUtil;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
+/**
+ * Warp command.
+ * Usage: /warp - List all warps (player only)
+ * Usage: /warp <name> - Teleport to a warp (with delay)
+ * Usage: /warp <name> <player> - Teleport another player to a warp instantly (requires essentials.warp.others or console)
+ */
 public class WarpCommand extends AbstractPlayerCommand {
     private final WarpManager warpManager;
     private final MessageManager messages;
@@ -34,6 +43,7 @@ public class WarpCommand extends AbstractPlayerCommand {
 
         requirePermission("essentials.warp");
         addUsageVariant(new WarpNamedCommand(warpManager, teleportManager, backManager));
+        addUsageVariant(new WarpOtherCommand(warpManager, backManager));
     }
 
     @Override
@@ -50,6 +60,10 @@ public class WarpCommand extends AbstractPlayerCommand {
         Msg.send(context, messages.get("commands.warp.list-prefix") + ": " + String.join(", ", warps.keySet()));
     }
 
+    /**
+     * Variant for teleporting self to a warp.
+     * Usage: /warp <name>
+     */
     private static class WarpNamedCommand extends AbstractPlayerCommand {
         private final WarpManager warpManager;
         private final TeleportManager teleportManager;
@@ -91,6 +105,64 @@ public class WarpCommand extends AbstractPlayerCommand {
                 warp.getWorld(), warp.getX(), warp.getY(), warp.getZ(), warp.getYaw(), warp.getPitch(),
                 messages.get("commands.warp.teleported", Map.of("warp", warpName))
             );
+        }
+    }
+
+    /**
+     * Variant for teleporting another player to a warp (console or admin).
+     * Usage: /warp <name> <player>
+     */
+    private static class WarpOtherCommand extends AbstractCommand {
+        private final WarpManager warpManager;
+        private final BackManager backManager;
+        private final RequiredArg<String> nameArg;
+        private final RequiredArg<PlayerRef> targetArg;
+
+        WarpOtherCommand(@Nonnull WarpManager warpManager, @Nonnull BackManager backManager) {
+            super("Teleport another player to a warp");
+            this.warpManager = warpManager;
+            this.backManager = backManager;
+            this.nameArg = withRequiredArg("name", "Warp name", ArgTypes.STRING);
+            this.targetArg = withRequiredArg("player", "Player to teleport", ArgTypes.PLAYER_REF);
+            requirePermission("essentials.warp.others");
+        }
+
+        @Override
+        protected CompletableFuture<Void> execute(@Nonnull CommandContext context) {
+            MessageManager messages = Essentials.getInstance().getMessageManager();
+            String warpName = context.get(nameArg);
+            Warp warp = warpManager.getWarp(warpName);
+
+            if (warp == null) {
+                Msg.send(context, messages.get("commands.warp.not-found", Map.of("warp", warpName)));
+                return CompletableFuture.completedFuture(null);
+            }
+
+            PlayerRef targetPlayer = context.get(targetArg);
+            if (targetPlayer == null) {
+                Msg.send(context, messages.get("commands.spawn.player-not-found"));
+                return CompletableFuture.completedFuture(null);
+            }
+
+            // Save location and teleport instantly using utility method
+            String error = TeleportUtil.saveLocationAndTeleport(
+                targetPlayer, backManager,
+                warp.getWorld(), warp.getX(), warp.getY(), warp.getZ(), warp.getYaw(), warp.getPitch()
+            );
+
+            if (error != null) {
+                Msg.send(context, error);
+                return CompletableFuture.completedFuture(null);
+            }
+
+            // Send messages
+            String senderName = "Console"; // Console always for this variant since AbstractCommand
+            Msg.send(context, messages.get("commands.warp.teleported-other", 
+                Map.of("player", targetPlayer.getUsername(), "warp", warpName)));
+            Msg.send(targetPlayer, messages.get("commands.warp.teleported-by", 
+                Map.of("sender", senderName, "warp", warpName)));
+
+            return CompletableFuture.completedFuture(null);
         }
     }
 }

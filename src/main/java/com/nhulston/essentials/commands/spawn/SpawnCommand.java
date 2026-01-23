@@ -4,7 +4,10 @@ import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.math.vector.Vector3f;
+import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
+import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
+import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
@@ -16,9 +19,17 @@ import com.nhulston.essentials.managers.TeleportManager;
 import com.nhulston.essentials.models.Spawn;
 import com.nhulston.essentials.util.MessageManager;
 import com.nhulston.essentials.util.Msg;
+import com.nhulston.essentials.util.TeleportUtil;
 
 import javax.annotation.Nonnull;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
+/**
+ * Teleport to spawn command.
+ * Usage: /spawn - Teleport yourself to spawn (with delay)
+ * Usage: /spawn <player> - Teleport another player to spawn instantly (requires essentials.spawn.others or console)
+ */
 public class SpawnCommand extends AbstractPlayerCommand {
     private final SpawnManager spawnManager;
     private final TeleportManager teleportManager;
@@ -35,6 +46,9 @@ public class SpawnCommand extends AbstractPlayerCommand {
 
         addAliases("s");
         requirePermission("essentials.spawn");
+        
+        // Add variant for teleporting other players
+        addUsageVariant(new SpawnOtherCommand(spawnManager, backManager));
     }
 
     @Override
@@ -61,5 +75,50 @@ public class SpawnCommand extends AbstractPlayerCommand {
             spawn.getWorld(), spawn.getX(), spawn.getY(), spawn.getZ(), spawn.getYaw(), spawn.getPitch(),
             messages.get("commands.spawn.teleported")
         );
+    }
+
+    /**
+     * Variant command for teleporting other players to spawn (console or admin).
+     * Usage: /spawn <player>
+     */
+    private static class SpawnOtherCommand extends AbstractCommand {
+        private final SpawnManager spawnManager;
+        private final BackManager backManager;
+        private final RequiredArg<PlayerRef> targetArg;
+
+        SpawnOtherCommand(@Nonnull SpawnManager spawnManager, @Nonnull BackManager backManager) {
+            super("Teleport another player to spawn");
+            this.spawnManager = spawnManager;
+            this.backManager = backManager;
+            this.targetArg = withRequiredArg("player", "Player to teleport", ArgTypes.PLAYER_REF);
+            requirePermission("essentials.spawn.others");
+        }
+
+        @Override
+        protected CompletableFuture<Void> execute(@Nonnull CommandContext context) {
+            MessageManager messages = Essentials.getInstance().getMessageManager();
+            Spawn spawn = spawnManager.getSpawn();
+
+            if (spawn == null) {
+                Msg.send(context, messages.get("commands.spawn.not-set"));
+                return CompletableFuture.completedFuture(null);
+            }
+
+            PlayerRef targetPlayer = context.get(targetArg);
+            if (targetPlayer == null) {
+                Msg.send(context, messages.get("commands.spawn.player-not-found"));
+                return CompletableFuture.completedFuture(null);
+            }
+
+            // Save location and teleport instantly using utility method
+            TeleportUtil.saveLocationAndTeleportToSpawn(targetPlayer, backManager, spawn);
+
+            // Send messages
+            String senderName = "Console"; // Console always for this variant since AbstractCommand
+            Msg.send(context, messages.get("commands.spawn.teleported-other", Map.of("player", targetPlayer.getUsername())));
+            Msg.send(targetPlayer, messages.get("commands.spawn.teleported-by", Map.of("sender", senderName)));
+
+            return CompletableFuture.completedFuture(null);
+        }
     }
 }

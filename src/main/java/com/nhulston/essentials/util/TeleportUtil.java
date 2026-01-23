@@ -560,4 +560,75 @@ public final class TeleportUtil {
 
         return null; // No solid ground found
     }
+
+    /**
+     * Saves a player's current location for /back before teleporting.
+     * Used internally by instant teleport methods.
+     *
+     * @param targetPlayer The player whose location to save
+     * @param backManager The back manager to save location
+     */
+    private static void saveBackLocation(@Nonnull PlayerRef targetPlayer,
+                                          @Nonnull com.nhulston.essentials.managers.BackManager backManager) {
+        Ref<EntityStore> targetRef = targetPlayer.getReference();
+        if (targetRef != null && targetRef.isValid()) {
+            Store<EntityStore> targetStore = targetRef.getStore();
+            EntityStore targetEntityStore = targetStore.getExternalData();
+            World targetWorld = targetEntityStore.getWorld();
+            
+            Vector3d currentPos = targetPlayer.getTransform().getPosition();
+            Vector3f currentRot = targetPlayer.getTransform().getRotation();
+            backManager.setTeleportLocation(
+                targetPlayer.getUuid(), 
+                targetWorld.getName(),
+                currentPos.getX(), currentPos.getY(), currentPos.getZ(),
+                currentRot.getY(), currentRot.getX()
+            );
+        }
+    }
+
+    /**
+     * Saves a player's current location for /back and teleports them to coordinates instantly.
+     * Used for admin/console commands that bypass teleport delays.
+     *
+     * @param targetPlayer The player to teleport
+     * @param backManager The back manager to save location
+     * @param worldName Target world name
+     * @param x Target X coordinate
+     * @param y Target Y coordinate
+     * @param z Target Z coordinate
+     * @param yaw Target yaw rotation
+     * @param pitch Target pitch rotation
+     * @return Error message if failed, null if successful
+     */
+    @Nullable
+    public static String saveLocationAndTeleport(@Nonnull PlayerRef targetPlayer,
+                                                   @Nonnull com.nhulston.essentials.managers.BackManager backManager,
+                                                   @Nonnull String worldName,
+                                                   double x, double y, double z,
+                                                   float yaw, float pitch) {
+        saveBackLocation(targetPlayer, backManager);
+
+        Ref<EntityStore> targetRef = targetPlayer.getReference();
+        if (targetRef != null && targetRef.isValid()) {
+            return teleportSafe(targetRef.getStore(), targetRef, worldName, x, y, z, yaw, pitch);
+        }
+        
+        return "Could not access player data.";
+    }
+
+    /**
+     * Saves a player's current location for /back and teleports them to spawn instantly.
+     * Used for admin/console commands that bypass teleport delays.
+     *
+     * @param targetPlayer The player to teleport
+     * @param backManager The back manager to save location
+     * @param spawn The spawn location
+     */
+    public static void saveLocationAndTeleportToSpawn(@Nonnull PlayerRef targetPlayer,
+                                                        @Nonnull com.nhulston.essentials.managers.BackManager backManager,
+                                                        @Nonnull Spawn spawn) {
+        saveBackLocation(targetPlayer, backManager);
+        teleportToSpawn(targetPlayer, spawn);
+    }
 }
