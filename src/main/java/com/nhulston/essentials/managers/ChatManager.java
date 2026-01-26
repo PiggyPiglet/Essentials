@@ -8,7 +8,7 @@ import com.nhulston.essentials.util.ColorUtil;
 import com.nhulston.essentials.util.ConfigManager;
 
 import javax.annotation.Nonnull;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -65,7 +65,7 @@ public class ChatManager {
      */
     @Nonnull
     private String getFormatForPlayer(@Nonnull UUID playerUuid) {
-        Map<String, String> formats = configManager.getChatFormats();
+        List<ConfigManager.ChatFormat> formats = configManager.getChatFormats();
 
         if (formats.isEmpty()) {
             return configManager.getChatFallbackFormat();
@@ -73,13 +73,12 @@ public class ChatManager {
 
         Set<String> playerGroups = PermissionsModule.get().getGroupsForUser(playerUuid);
 
-        // Check each configured format in order (LinkedHashMap preserves insertion order)
-        for (Map.Entry<String, String> entry : formats.entrySet()) {
-            String groupName = entry.getKey();
+        // Check each configured format in order (List preserves insertion order)
+        for (ConfigManager.ChatFormat chatFormat : formats) {
             // Check if player is in this group (case-insensitive)
             for (String playerGroup : playerGroups) {
-                if (playerGroup.equalsIgnoreCase(groupName)) {
-                    return entry.getValue();
+                if (playerGroup.equalsIgnoreCase(chatFormat.group())) {
+                    return chatFormat.format();
                 }
             }
         }

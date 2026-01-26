@@ -8,9 +8,10 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
 
 public class ConfigManager {
     private static final String DEFAULT_CHAT_FORMAT = "&7%player%&f: %message%";
@@ -18,8 +19,11 @@ public class ConfigManager {
     private static final int DEFAULT_TELEPORT_DELAY = 3;
     private static final int DEFAULT_RTP_COOLDOWN = 300;
 
-    // Pattern to match section headers like [section], [section-name], or [section.subsection]
-    private static final Pattern SECTION_PATTERN = Pattern.compile("^\\[([a-zA-Z0-9_.-]+)]\\s*$");
+    /**
+     * Represents a chat format configuration entry with group name and format string.
+     * Used to maintain ordering of chat formats for priority-based matching.
+     */
+    public record ChatFormat(@Nonnull String group, @Nonnull String format) {}
 
     private final Path configPath;
 
@@ -29,7 +33,7 @@ public class ConfigManager {
     // Chat settings
     private volatile boolean chatEnabled = true;
     private volatile String chatFallbackFormat = DEFAULT_CHAT_FORMAT;
-    private final ConcurrentHashMap<String, String> chatFormats = new ConcurrentHashMap<>();
+    private volatile List<ChatFormat> chatFormats = List.of();
 
     // Build settings
     private volatile boolean disableBuilding = false;
@@ -125,15 +129,18 @@ public class ConfigManager {
             chatFallbackFormat = config.getString("chat.fallback-format", () -> DEFAULT_CHAT_FORMAT);
 
             // Load chat formats (preserve order for priority)
-            chatFormats.clear();
             TomlTable formatsTable = config.getTable("chat.formats");
             if (formatsTable != null) {
+                List<ChatFormat> formats = new ArrayList<>();
                 for (String group : formatsTable.keySet()) {
                     String format = formatsTable.getString(group);
                     if (format != null) {
-                        chatFormats.put(group.toLowerCase(), format);
+                        formats.add(new ChatFormat(group.toLowerCase(), format));
                     }
                 }
+                chatFormats = List.copyOf(formats);
+            } else {
+                chatFormats = List.of();
             }
 
             // Build config
@@ -252,7 +259,7 @@ public class ConfigManager {
     }
 
     @Nonnull
-    public Map<String, String> getChatFormats() {
+    public List<ChatFormat> getChatFormats() {
         return chatFormats;
     }
 
