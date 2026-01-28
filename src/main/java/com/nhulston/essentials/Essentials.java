@@ -225,7 +225,7 @@ public class Essentials extends JavaPlugin {
         new StarterKitEvent(kitManager, configManager, storageManager).register(getEventRegistry());
 
         // Sleep percentage system
-        new SleepPercentageEvent(configManager).register(getEntityStoreRegistry());
+        new SleepPercentageEvent(configManager, messageManager).register(getEntityStoreRegistry());
 
         // Player disconnect cleanup
         new PlayerQuitEvent(storageManager, tpaManager, teleportManager, backManager).register(getEventRegistry());
