@@ -94,6 +94,9 @@ public class ConfigManager {
     private volatile boolean starterKitEnabled = false;
     private volatile String starterKitName = "";
 
+    // Update notification settings
+    private volatile boolean updateNotifyEnabled = true;
+
     public ConfigManager(@Nonnull Path dataFolder) {
         this.configPath = dataFolder.resolve("config.toml");
         load();
@@ -217,6 +220,9 @@ public class ConfigManager {
             // Starter kit config
             starterKitEnabled = config.getBoolean("starter-kit.enabled", () -> false);
             starterKitName = config.getString("starter-kit.kit", () -> "");
+
+            // Update notification config
+            updateNotifyEnabled = config.getBoolean("updates.notify", () -> true);
 
             Log.info("Config loaded!");
         } catch (Exception e) {
@@ -417,5 +423,9 @@ public class ConfigManager {
     @Nonnull
     public String getStarterKitName() {
         return starterKitName;
+    }
+
+    public boolean isUpdateNotifyEnabled() {
+        return updateNotifyEnabled;
     }
 }

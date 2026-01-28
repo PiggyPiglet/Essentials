@@ -219,7 +219,7 @@ public class Essentials extends JavaPlugin {
         new JoinLeaveEvent(configManager, storageManager).register(getEventRegistry());
 
         // Update notification for admins
-        new UpdateNotifyEvent(versionChecker).register(getEventRegistry());
+        new UpdateNotifyEvent(versionChecker, configManager).register(getEventRegistry());
 
         // Starter kit for new players
         new StarterKitEvent(kitManager, configManager, storageManager).register(getEventRegistry());

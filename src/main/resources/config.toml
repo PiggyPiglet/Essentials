@@ -184,3 +184,8 @@ enabled = true
 # This kit will not appear in the /kit menu and cannot be obtained any other way
 # The player must have the essentials.kit.<kitname> permission to receive the starter kit
 kit = "starter"
+
+[updates]
+# Notify admins (players with * permission) when a plugin update is available
+# Notification is shown once when an admin joins the server
+notify = true

@@ -10,6 +10,7 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.nhulston.essentials.util.ColorUtil;
+import com.nhulston.essentials.util.ConfigManager;
 import com.nhulston.essentials.util.Log;
 import com.nhulston.essentials.util.VersionChecker;
 
@@ -22,13 +23,20 @@ public class UpdateNotifyEvent {
     private static final String ADMIN_PERMISSION = "*";
     
     private final VersionChecker versionChecker;
+    private final ConfigManager configManager;
 
-    public UpdateNotifyEvent(@Nonnull VersionChecker versionChecker) {
+    public UpdateNotifyEvent(@Nonnull VersionChecker versionChecker, @Nonnull ConfigManager configManager) {
         this.versionChecker = versionChecker;
+        this.configManager = configManager;
     }
 
     public void register(@Nonnull EventRegistry eventRegistry) {
         eventRegistry.registerGlobal(PlayerReadyEvent.class, event -> {
+            // Check if update notifications are enabled
+            if (!configManager.isUpdateNotifyEnabled()) {
+                return;
+            }
+            
             if (!versionChecker.isUpdateAvailable()) {
                 return;
             }
