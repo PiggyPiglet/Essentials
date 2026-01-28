@@ -2,6 +2,7 @@ package com.nhulston.essentials.commands.kit;
 
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
@@ -24,6 +25,7 @@ import com.nhulston.essentials.util.Msg;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Command to open the kit selection GUI.
@@ -128,47 +130,63 @@ public class KitCommand extends AbstractPlayerCommand {
                 }
             }
             
-            // Get player inventory
+            // Set cooldown before applying kit
+            if (kit.getCooldown() > 0 && !canBypassCooldown) {
+                kitManager.setKitUsed(playerRef.getUuid(), kit.getId());
+            }
+            
+            // Apply kit on world thread
+            applyKitToPlayer(kit, playerRef, ref, store, world, () -> Msg.send(context, messages.get("commands.kit.received", Map.of("kit", kit.getDisplayName()))));
+        }
+    }
+    
+    /**
+     * Helper method to apply a kit to a player on their world thread.
+     * Used by both KitClaimCommand and KitGiveCommand.
+     * 
+     * @param onSuccess Callback executed after kit is successfully applied (runs on world thread)
+     */
+    private static void applyKitToPlayer(@Nonnull Kit kit, @Nonnull PlayerRef playerRef,
+                                         @Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store,
+                                         @Nonnull World world, @Nonnull Runnable onSuccess) {
+        world.execute(() -> {
+            if (!ref.isValid()) {
+                return;
+            }
+            
             Player player = store.getComponent(ref, Player.getComponentType());
             if (player == null) {
-                Log.error("Failed to get Player component for " + playerRef.getUsername() + " in KitClaimCommand");
+                Log.error("Failed to get Player component for " + playerRef.getUsername());
                 return;
             }
             
             Inventory inventory = player.getInventory();
             if (inventory == null) {
-                Log.error("Failed to get inventory for " + playerRef.getUsername() + " in KitClaimCommand");
+                Log.error("Failed to get inventory for " + playerRef.getUsername());
                 return;
             }
             
-            // Apply kit (overflow items will be dropped on the ground)
             KitManager.applyKit(kit, inventory, ref, store);
-            
-            // Sync inventory changes to client
             player.sendInventory();
-            
-            // Set cooldown
-            if (kit.getCooldown() > 0 && !canBypassCooldown) {
-                kitManager.setKitUsed(playerRef.getUuid(), kit.getId());
-            }
-            
-            Msg.send(context, messages.get("commands.kit.received", Map.of("kit", kit.getDisplayName())));
-        }
+
+            onSuccess.run();
+        });
     }
     
     /**
      * Usage variant for /kit <kitname> <player> - Give kit to another player
+     * Can be executed by players or console.
      * Does not check target player's permissions or cooldowns.
      * Does not modify any cooldowns.
      * Requires essentials.kit.other permission.
      */
-    private static class KitGiveCommand extends AbstractPlayerCommand {
+    private static class KitGiveCommand extends AbstractCommand {
         private final RequiredArg<String> kitNameArg;
         private final RequiredArg<PlayerRef> targetPlayerArg;
         private final KitManager kitManager;
         
         KitGiveCommand(@Nonnull KitManager kitManager) {
-            super("Give a kit to another player");
+            super("Give a kit to another player");  // Description only, no command name!
             this.kitManager = kitManager;
             this.kitNameArg = withRequiredArg("kitname", "Kit to give", ArgTypes.STRING);
             this.targetPlayerArg = withRequiredArg("player", "Player to give kit to", ArgTypes.PLAYER_REF);
@@ -176,8 +194,7 @@ public class KitCommand extends AbstractPlayerCommand {
         }
         
         @Override
-        protected void execute(@Nonnull CommandContext context, @Nonnull Store<EntityStore> store,
-                               @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
+        protected CompletableFuture<Void> execute(@Nonnull CommandContext context) {
             MessageManager messages = Essentials.getInstance().getMessageManager();
             String kitName = context.get(kitNameArg);
             PlayerRef targetPlayer = context.get(targetPlayerArg);
@@ -186,20 +203,20 @@ public class KitCommand extends AbstractPlayerCommand {
             Kit kit = kitManager.getKit(kitName.toLowerCase());
             if (kit == null) {
                 Msg.send(context, messages.get("commands.kit.not-found", Map.of("kit", kitName)));
-                return;
+                return CompletableFuture.completedFuture(null);
             }
             
             // Validate target player
             if (targetPlayer == null) {
                 Msg.send(context, messages.get("commands.kit.player-not-found", Map.of("player", kitName)));
-                return;
+                return CompletableFuture.completedFuture(null);
             }
             
             // Get target player's ref and store
             Ref<EntityStore> targetRef = targetPlayer.getReference();
             if (targetRef == null || !targetRef.isValid()) {
                 Msg.send(context, messages.get("commands.kit.player-not-found", Map.of("player", targetPlayer.getUsername())));
-                return;
+                return CompletableFuture.completedFuture(null);
             }
             
             Store<EntityStore> targetStore = targetRef.getStore();
@@ -207,37 +224,15 @@ public class KitCommand extends AbstractPlayerCommand {
             // Get target player's world and execute on their thread
             World targetWorld = targetStore.getExternalData().getWorld();
 
-            // Execute on target player's world thread
-            targetWorld.execute(() -> {
-                if (!targetRef.isValid()) {
-                    Msg.send(context, messages.get("commands.kit.player-not-found", Map.of("player", targetPlayer.getUsername())));
-                    return;
-                }
-                
-                // Get target player's inventory
-                Player player = targetStore.getComponent(targetRef, Player.getComponentType());
-                if (player == null) {
-                    Log.error("Failed to get Player component for " + targetPlayer.getUsername() + " in KitGiveCommand");
-                    return;
-                }
-                
-                Inventory inventory = player.getInventory();
-                if (inventory == null) {
-                    Log.error("Failed to get inventory for " + targetPlayer.getUsername() + " in KitGiveCommand");
-                    return;
-                }
-                
-                // Apply kit (no permission or cooldown checks)
-                KitManager.applyKit(kit, inventory, targetRef, targetStore);
-                
-                // Sync inventory changes to client
-                player.sendInventory();
-                
-                // Send messages
+            // Apply kit on target player's world thread (no permission or cooldown checks)
+            applyKitToPlayer(kit, targetPlayer, targetRef, targetStore, targetWorld, () -> {
+                // Send messages to both players
                 Msg.send(targetPlayer, messages.get("commands.kit.received", Map.of("kit", kit.getDisplayName())));
                 Msg.send(context, messages.get("commands.kit.given", 
                     Map.of("kit", kit.getDisplayName(), "player", targetPlayer.getUsername())));
             });
+            
+            return CompletableFuture.completedFuture(null);
         }
     }
 }
