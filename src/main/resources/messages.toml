@@ -205,5 +205,8 @@ name-empty = "&cWarp name cannot be empty."
 name-too-long = "&cWarp name cannot be longer than {max} characters."
 name-invalid = "&cWarp name must be alphanumeric only."
 
+[trash]
+opened = "&aTrash bin opened. Items placed here will be instantly destroyed."
+
 [errors]
 generic = "&cAn error occurred. Please try again."

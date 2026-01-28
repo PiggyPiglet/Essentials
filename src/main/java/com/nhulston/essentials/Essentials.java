@@ -21,6 +21,7 @@ import com.nhulston.essentials.commands.rules.RulesCommand;
 import com.nhulston.essentials.commands.shout.ShoutCommand;
 import com.nhulston.essentials.commands.top.TopCommand;
 import com.nhulston.essentials.commands.tphere.TphereCommand;
+import com.nhulston.essentials.commands.trash.TrashCommand;
 import com.nhulston.essentials.commands.spawn.SetSpawnCommand;
 import com.nhulston.essentials.commands.spawn.SpawnCommand;
 import com.nhulston.essentials.commands.tpa.TpaCommand;
@@ -196,6 +197,9 @@ public class Essentials extends JavaPlugin {
         
         // Rules command
         getCommandRegistry().registerCommand(new RulesCommand(configManager));
+        
+        // Trash command
+        getCommandRegistry().registerCommand(new TrashCommand());
     }
 
     private void registerEvents() {

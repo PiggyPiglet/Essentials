@@ -62,6 +62,7 @@ Essentials is an all-in-one utility plugin for Hytale server administrators.
 | <code>/shout</code>              | Broadcast message to all players  | <code>essentials.shout</code>        |
 | <code>/repair</code>             | Repair the item in your hand      | <code>essentials.repair</code>       |
 | <code>/rules</code>              | Display server rules              | None                                 |
+| <code>/trash</code>              | Throw away some items             | <code>essentials.trash</code>        |
 
 # Permissions
 
@@ -101,7 +102,7 @@ If you have a permissions mod, follow the instructions for that mod.
 | <code>essentials.rtp.cooldown.bypass</code>    | Bypass RTP cooldown                                                                         |
 | <code>essentials.list</code>                   | List online players                                                                         |
 | <code>essentials.heal</code>                   | Restore health to full                                                                      |
-| <code>essentials.freecam</code>                | Toggle freecam mod                                                                          |
+| <code>essentials.freecam</code>                | Toggle freecam                                                                              |
 | <code>essentials.god</code>                    | Toggle god mode (invincibility)                                                             |
 | <code>essentials.msg</code>                    | Send private messages and reply (aliases: /m, /message, /whisper, /pm, /r, /reply)          |
 | <code>essentials.tphere</code>                 | Teleport players to you                                                                     |
@@ -111,6 +112,7 @@ If you have a permissions mod, follow the instructions for that mod.
 | <code>essentials.shout</code>                  | Broadcast messages to all players (aliases: /broadcast)                                     |
 | <code>essentials.repair</code>                 | Repair items (aliases: /fix)                                                                |
 | <code>essentials.repair.cooldown.bypass</code> | Bypass repair cooldown                                                                      |
+| <code>essentials.trash</code>                  | Open /trash                                                                                 |
 
 # Configuration
 
