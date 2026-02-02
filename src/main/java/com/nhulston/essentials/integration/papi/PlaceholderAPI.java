@@ -5,6 +5,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface PlaceholderAPI {
-    @Nullable
+    @NotNull
     String setPlaceholders(final PlayerRef ref, @NotNull final String message);
 }
