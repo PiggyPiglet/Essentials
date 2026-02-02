@@ -144,13 +144,13 @@ Essentials has optional PlaceholderAPI integration in its chat formatting, in ad
 | %essentials_allowed_kits_names%         | Names of kits this player can access (split by ", ")    |
 | %essentials_all_warps_num%              | Number of all warps on server                           |
 | %essentials_all_warps_names%            | Names of all warps on server (split by ", ")            |
-| %essentials_\<warp/home>_\<name>_world% | World name of a particular warp                         |
-| %essentials_\<warp/home>_\<name>_coords% | Coords of a particular warp (x y z)                     |
-| %essentials_\<warp/home>_\<name>_x%     | X coord of a warp                                       |
-| %essentials_\<warp/home>_\<name>_y%     | Y coord of a warp                                       |
-| %essentials_\<warp/home>_\<name>_z%     | Z coord of a warp                                       |
-| %essentials_\<warp/home>_\<name>_yaw%   | Yaw of a warp                                           |
-| %essentials_\<warp/home>_\<name>_pitch% | Pitch of a warp                                         |
+| %essentials_\<warp/home>_\<name>_world% | World name of a particular warp/home                    |
+| %essentials_\<warp/home>_\<name>_coords% | Coords of a particular warp/home (x y z)                |
+| %essentials_\<warp/home>_\<name>_x%     | X coord of a warp/home                                  |
+| %essentials_\<warp/home>_\<name>_y%     | Y coord of a warp/home                                  |
+| %essentials_\<warp/home>_\<name>_z%     | Z coord of a warp/home                                  |
+| %essentials_\<warp/home>_\<name>_yaw%   | Yaw of a warp/home                                      |
+| %essentials_\<warp/home>_\<name>_pitch% | Pitch of a warp/home                                    |
 | %essentials_home_\<name>_createdat%     | Timestamp of when a home was created                    |
 | %essentials_kit_\<name>_name%           | Display name of a kit                                   |
 | %essentials_kit_\<name>_id%             | Id of a kit                                             |
