@@ -112,7 +112,6 @@ public class EssentialsExpansion extends PlaceholderExpansion {
                     case "z": return twoDec(warp.getZ());
                     case "yaw": return String.valueOf(warp.getYaw());
                     case "pitch": return String.valueOf(warp.getPitch());
-//                    case "allowed": return PERMISSIONS.hasPermission(player.getUuid(), "essentials.war")
                 }
 
             case "kit":
