@@ -32,7 +32,6 @@ public final class PAPIIntegration {
             register.invoke(expansion);
             Log.info("[PlaceholderAPI] Found, placeholders will be replaced in chat.");
         } catch (Exception e) {
-            Log.info("[PlaceholderAPI] Not found, placeholders will not be replaced in chat.");
             available = false;
         }
     }
@@ -41,10 +40,10 @@ public final class PAPIIntegration {
         return available;
     }
 
-    @Nullable
+    @NotNull
     public static String setPlaceholders(@Nullable final PlayerRef player, @NotNull final String text) {
         if (placeholderapi == null) {
-            return null;
+            return text;
         }
 
         return placeholderapi.setPlaceholders(player, text);
