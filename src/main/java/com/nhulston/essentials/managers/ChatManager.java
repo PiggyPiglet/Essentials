@@ -1,9 +1,11 @@
 package com.nhulston.essentials.managers;
 
+import at.helpch.placeholderapi.PlaceholderAPI;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.event.events.player.PlayerChatEvent;
 import com.hypixel.hytale.server.core.permissions.PermissionsModule;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.nhulston.essentials.integration.PAPIIntegration;
 import com.nhulston.essentials.util.ColorUtil;
 import com.nhulston.essentials.util.ConfigManager;
 
@@ -46,8 +48,13 @@ public class ChatManager {
         }
 
         String formatted = format
-                .replace("%player%", sender.getUsername())
-                .replace("%message%", sanitizedContent);
+                .replace("%player%", sender.getUsername());
+
+        if (PAPIIntegration.available()) {
+            formatted = PlaceholderAPI.setPlaceholders(sender, formatted);
+        }
+
+        formatted = formatted.replace("%message%", sanitizedContent);
 
         return ColorUtil.colorize(formatted);
     }
