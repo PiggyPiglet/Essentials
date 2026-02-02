@@ -11,12 +11,12 @@ repositories {
     mavenLocal()
     mavenCentral()
 
-    maven("https://maven.hytale.com/release/")
     maven("https://repo.helpch.at/releases")
 }
 
 dependencies {
-    compileOnly("com.hypixel.hytale:Server:2026.01.24-6e2d4fc36")
+    // Hytale Server API (provided by server at runtime)
+    compileOnly(files("libs/HytaleServer.jar"))
     compileOnly("at.helpch:placeholderapi-hytale:1.0.2")
 
     // Common dependencies (will be bundled in JAR)
