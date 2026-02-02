@@ -135,6 +135,8 @@ public class EssentialsExpansion extends PlaceholderExpansion {
                         return PlaceholderAPI.booleanValue(kit.isReplaceMode());
                     case "itemsnum":
                         return String.valueOf(kit.getItems().size());
+                    case "allowed":
+                        return PlaceholderAPI.booleanValue(PERMISSIONS.hasPermission(player.getUuid(), "essentials.kit." + kit.getId()));
                 }
 
             case "home":
