@@ -48,4 +48,13 @@ public final class PAPIIntegration {
 
         return placeholderapi.setPlaceholders(player, text);
     }
+
+    @NotNull
+    public static String setRelationalPlaceholders(@Nullable final PlayerRef one, @Nullable final PlayerRef two, @NotNull final String text) {
+        if (placeholderapi == null) {
+            return text;
+        }
+
+        return placeholderapi.setRelationPlaceholders(one, two, text);
+    }
 }

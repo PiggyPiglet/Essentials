@@ -26,18 +26,10 @@ public class ChatManager {
     }
 
     /**
-     * Creates a custom formatter for the PlayerChatEvent based on player's groups.
-     */
-    @Nonnull
-    public PlayerChatEvent.Formatter createFormatter() {
-        return this::formatMessage;
-    }
-
-    /**
      * Formats a chat message for a player based on their permission groups.
      */
     @Nonnull
-    public Message formatMessage(@Nonnull PlayerRef sender, @Nonnull String content) {
+    public Message formatMessage(@Nonnull PlayerRef sender, @Nonnull PlayerRef recipient, @Nonnull String content) {
         String format = getFormatForPlayer(sender.getUuid());
 
         // Strip color codes from message unless player has permission
@@ -50,7 +42,7 @@ public class ChatManager {
                 .replace("%player%", sender.getUsername());
 
         if (PAPIIntegration.available()) {
-            formatted = PAPIIntegration.setPlaceholders(sender, formatted);
+            formatted = PAPIIntegration.setRelationalPlaceholders(sender, recipient, PAPIIntegration.setPlaceholders(sender, formatted));
         }
 
         formatted = formatted.replace("%message%", sanitizedContent);
