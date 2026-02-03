@@ -86,10 +86,6 @@ public class EssentialsExpansion extends PlaceholderExpansion {
 
         final String[] args = ARGUMENT_DELIMITER.split(params);
 
-        if (args.length == 1) {
-            return null;
-        }
-
         if (args.length != 3) {
             return null;
         }
@@ -110,6 +106,7 @@ public class EssentialsExpansion extends PlaceholderExpansion {
                     case "z": return twoDec(warp.getZ());
                     case "yaw": return String.valueOf(warp.getYaw());
                     case "pitch": return String.valueOf(warp.getPitch());
+                    case "allowed": return PlaceholderAPI.booleanValue(PERMISSIONS.hasPermission(player.getUuid(), "essentials.warps." + args[1]));
                 }
 
             case "kit":
