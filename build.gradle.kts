@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("com.hypixel.hytale:Server:2026.01.24-6e2d4fc36")
+    compileOnly("com.hypixel.hytale:Server:latest.release")
 
     // Common dependencies (will be bundled in JAR)
     implementation("com.google.code.gson:gson:2.10.1")
