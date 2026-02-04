@@ -2,6 +2,7 @@ package com.nhulston.essentials.events;
 
 import com.hypixel.hytale.event.EventRegistry;
 import com.hypixel.hytale.server.core.event.events.player.PlayerConnectEvent;
+import com.nhulston.essentials.integration.PAPIIntegration;
 import com.nhulston.essentials.util.ColorUtil;
 import com.nhulston.essentials.util.ConfigManager;
 
@@ -31,6 +32,11 @@ public class MotdEvent {
 
             // Normalize line endings (remove \r from Windows line endings)
             message = message.replace("\r", "");
+
+            // replace papi
+            if (PAPIIntegration.available()) {
+                message = PAPIIntegration.get().setPlaceholders(event.getPlayerRef(), message);
+            }
 
             // Split by newlines and send each line
             String[] lines = message.split("\n");

@@ -6,6 +6,8 @@ import com.hypixel.hytale.server.core.event.events.player.PlayerConnectEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerDisconnectEvent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
+import com.nhulston.essentials.integration.PAPIIntegration;
+import com.nhulston.essentials.integration.papi.PlaceholderAPI;
 import com.nhulston.essentials.util.ColorUtil;
 import com.nhulston.essentials.util.ConfigManager;
 import com.nhulston.essentials.util.Log;
@@ -59,7 +61,7 @@ public class JoinLeaveEvent {
             message = message.replace("%player%", playerName);
 
             // Broadcast to all players
-            Universe.get().sendMessage(ColorUtil.colorize(message));
+            broadcastPapiMessage(message, playerRef);
         });
 
         // Leave messages - PlayerDisconnectEvent fires when player disconnects
@@ -76,9 +78,22 @@ public class JoinLeaveEvent {
             message = message.replace("%player%", playerName);
 
             // Broadcast to all remaining players (thread-safe)
-            Universe.get().sendMessage(ColorUtil.colorize(message));
+            broadcastPapiMessage(message, playerRef);
         });
 
         Log.info("Join/leave message broadcasts registered.");
+    }
+
+    private void broadcastPapiMessage(@Nonnull final String message, @Nonnull final PlayerRef sender) {
+        for (final PlayerRef recipient : Universe.get().getPlayers()) {
+            String replacedMessage = message;
+
+            if (PAPIIntegration.available()) {
+                final PlaceholderAPI papi = PAPIIntegration.get();
+                replacedMessage = papi.setRelationalPlaceholders(sender, recipient, papi.setPlaceholders(sender, replacedMessage));
+            }
+
+            recipient.sendMessage(ColorUtil.colorize(replacedMessage));
+        }
     }
 }
