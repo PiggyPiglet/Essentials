@@ -8,4 +8,9 @@ public class PAPIImplementation implements PlaceholderAPI {
     public @NotNull String setPlaceholders(final PlayerRef ref, final @NotNull String message) {
         return at.helpch.placeholderapi.PlaceholderAPI.setPlaceholders(ref, message);
     }
+
+    @Override
+    public @NotNull String setRelationalPlaceholders(final PlayerRef one, final PlayerRef two, final @NotNull String message) {
+        return at.helpch.placeholderapi.PlaceholderAPI.setRelationalPlaceholders(one, two, message);
+    }
 }

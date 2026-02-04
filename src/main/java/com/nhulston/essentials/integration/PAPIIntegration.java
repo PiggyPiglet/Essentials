@@ -53,5 +53,10 @@ public final class PAPIIntegration {
         public @NotNull String setPlaceholders(final PlayerRef ref, final @NotNull String message) {
             return message;
         }
+
+        @Override
+        public @NotNull String setRelationalPlaceholders(final PlayerRef one, final PlayerRef two, final @NotNull String message) {
+            return message;
+        }
     }
 }

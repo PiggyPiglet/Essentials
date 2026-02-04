@@ -5,6 +5,7 @@ import com.hypixel.hytale.server.core.event.events.player.PlayerChatEvent;
 import com.hypixel.hytale.server.core.permissions.PermissionsModule;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.nhulston.essentials.integration.PAPIIntegration;
+import com.nhulston.essentials.integration.papi.PlaceholderAPI;
 import com.nhulston.essentials.util.ColorUtil;
 import com.nhulston.essentials.util.ConfigManager;
 
@@ -29,7 +30,7 @@ public class ChatManager {
      * Formats a chat message for a player based on their permission groups.
      */
     @Nonnull
-    public Message formatMessage(@Nonnull PlayerRef sender, @Nonnull String content) {
+    public Message formatMessage(@Nonnull PlayerRef sender, @Nonnull PlayerRef recipient, @Nonnull String content) {
         String format = getFormatForPlayer(sender.getUuid());
 
         // Strip color codes from message unless player has permission
@@ -42,7 +43,8 @@ public class ChatManager {
                 .replace("%player%", sender.getUsername());
 
         if (PAPIIntegration.available()) {
-            formatted = PAPIIntegration.get().setPlaceholders(sender, formatted);
+            final PlaceholderAPI papi = PAPIIntegration.get();
+            formatted = papi.setRelationalPlaceholders(sender, recipient, papi.setPlaceholders(sender, formatted));
         }
 
         formatted = formatted.replace("%message%", sanitizedContent);
