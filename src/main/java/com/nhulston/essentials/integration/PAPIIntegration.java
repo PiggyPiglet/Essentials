@@ -41,20 +41,17 @@ public final class PAPIIntegration {
     }
 
     @NotNull
-    public static String setPlaceholders(@Nullable final PlayerRef player, @NotNull final String text) {
-        if (placeholderapi == null) {
-            return text;
-        }
-
-        return placeholderapi.setPlaceholders(player, text);
+    public static PlaceholderAPI get() {
+        // if for whatever reason this method gets called even when papi isn't available, we'll provide a null impl so it doesn't error out
+        return placeholderapi == null || !available ? NullPlaceholderAPI.INSTANCE : placeholderapi;
     }
 
-    @NotNull
-    public static String setRelationalPlaceholders(@Nullable final PlayerRef one, @Nullable final PlayerRef two, @NotNull final String text) {
-        if (placeholderapi == null) {
-            return text;
-        }
+    private static class NullPlaceholderAPI implements PlaceholderAPI {
+        private static final PlaceholderAPI INSTANCE = new NullPlaceholderAPI();
 
-        return placeholderapi.setRelationPlaceholders(one, two, text);
+        @Override
+        public @NotNull String setPlaceholders(final PlayerRef ref, final @NotNull String message) {
+            return message;
+        }
     }
 }

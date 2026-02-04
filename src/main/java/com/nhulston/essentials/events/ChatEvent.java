@@ -20,7 +20,7 @@ public class ChatEvent {
                     event.setCancelled(true);
 
                     if (chatManager.isEnabled()) {
-                        event.getTargets().forEach(ref -> ref.sendMessage(chatManager.formatMessage(event.getSender(), ref, event.getContent())));
+                        event.getTargets().forEach(ref -> ref.sendMessage(chatManager.formatMessage(event.getSender(), event.getContent())));
                     }
 
                     return event;
